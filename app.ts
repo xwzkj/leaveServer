@@ -2,13 +2,16 @@ import Koa from 'koa'
 import Router from '@koa/router'
 import cors from '@koa/cors'
 import bodyparser from '@koa/bodyparser'
+import koaStatic from 'koa-static'
+
 import path from 'path'
 import url from 'url'
 import fs from 'fs'
+
+import dotenv from 'dotenv'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc.js'
 import timezone from 'dayjs/plugin/timezone.js'
-import dotenv from 'dotenv'
 dotenv.config()
 
 const hostname = process.env.HOSTNAME || 'localhost'
@@ -31,12 +34,14 @@ const router = new Router()
 
 app.use(cors())
 app.use(bodyparser())
-app.use(async (ctx, next) => {
+
+// 给router设置鉴权中间件
+router.use(async (ctx, next) => {
     const auth = ctx.get('Authorization')
     const k = auth?.startsWith('Bearer ') ? auth.slice(7) : ''
     if (!k || k !== key) {
         ctx.status = 400
-        ctx.body = '400 Bad Request'
+        ctx.body = { 'code': 400, 'msg': '鉴权失败' }
         return
     }
     return next()
@@ -70,6 +75,9 @@ router.get('/remove', async (ctx) => {
     ctx.body = data
 })
 app.use(router.routes())
+
+// 托管前端界面
+app.use(koaStatic(path.join(path.dirname(url.fileURLToPath(import.meta.url)), 'static')))
 
 app.use(async (ctx) => {
     if (!ctx.body) { //若没有设置 ctx.body, 则说明没有到匹配任何路由
