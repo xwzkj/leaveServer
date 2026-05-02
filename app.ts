@@ -12,7 +12,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 const hostname = process.env.HOSTNAME || 'localhost'
-const port = process.env.PORT || 3000
+const port = parseInt(process.env.PORT || '3000')
 const key = process.env.API_KEY || '114514'
 const dataFileName = path.join(path.dirname(url.fileURLToPath(import.meta.url)), 'data.json')
 if (!fs.existsSync(dataFileName)) {
