@@ -46,6 +46,7 @@ router.get('/get', async (ctx) => {
 })
 router.post('/add', async (ctx) => {
     const body = ctx.request.body as Leave
+    console.log('add接口被调用：', body)
     if (typeof body.name !== 'string' || body.name.length > 20 ||
         typeof body.start !== 'string' || body.start.length > 10 ||
         typeof body.end !== 'string' || body.end.length > 10) {
@@ -60,6 +61,7 @@ router.post('/add', async (ctx) => {
 })
 router.get('/remove', async (ctx) => {
     const name = ctx.query.name as string
+    console.log('remove接口被调用：', name)
     data = data.filter(item => item.name !== name)
     saveToFile()
     ctx.body = data
@@ -86,4 +88,4 @@ async function checkExpiredAndSave() {
     data = data.filter(item => now.isBefore(dayjs(item.end)))
     saveToFile()
 }
-setInterval(checkExpiredAndSave, 2000)
+setInterval(checkExpiredAndSave, 5 * 60 * 1000)
