@@ -14,6 +14,7 @@ dotenv.config()
 const hostname = process.env.HOSTNAME || 'localhost'
 const port = parseInt(process.env.PORT || '3000')
 const key = process.env.API_KEY || '114514'
+const classTotalStudents = parseInt(process.env.CLASS_TOTAL_STUDENTS || '0')
 const dataFileName = path.join(path.dirname(url.fileURLToPath(import.meta.url)), 'data.json')
 if (!fs.existsSync(dataFileName)) {
     fs.writeFileSync(dataFileName, "[]")
@@ -40,7 +41,9 @@ app.use(async (ctx, next) => {
     }
     return next()
 })
-
+router.get('/studentCount', async (ctx) => {
+    ctx.body = { total: classTotalStudents, actual: classTotalStudents - data.length, leave: data.length }
+})
 router.get('/get', async (ctx) => {
     ctx.body = data
 })
@@ -51,7 +54,7 @@ router.post('/add', async (ctx) => {
         typeof body.start !== 'string' || body.start.length > 10 ||
         typeof body.end !== 'string' || body.end.length > 10) {
         ctx.status = 400
-        ctx.body = '数据格式错误'
+        ctx.body = { 'code': 400, 'msg': '数据格式错误' }
         return
     }
     data = data.filter(item => item.name !== body.name)
@@ -71,7 +74,7 @@ app.use(router.routes())
 app.use(async (ctx) => {
     if (!ctx.body) { //若没有设置 ctx.body, 则说明没有到匹配任何路由
         ctx.status = 404
-        ctx.body = '404 Not Found'
+        ctx.body = { 'code': 404, 'msg': '404 Not Found' }
     }
 })
 
