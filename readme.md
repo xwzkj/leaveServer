@@ -1,5 +1,7 @@
 # 请假服务器
 
+为[奶酪课程表](https://github.com/xwzkj/cheeseschedule)出席人数小组件提供的后端服务
+
 ## 环境变量
 
 可放在.env文件中
@@ -30,3 +32,7 @@ CLASS_TOTAL_STUDENTS=总学生数
 ## 前端页面
 
 访问/，在query中传入key，即可进入
+
+## 自动更新数据
+
+建议搭配[getWeiXinMsgToLeaveServer](https://github.com/xwzkj/getWeiXinMsgToLeaveServer)使用，从windows微信自动获取请假信息
