@@ -1,5 +1,16 @@
 # 请假服务器
 
+## 环境变量
+
+可放在.env文件中
+
+HOSTNAME=主机名
+PORT=端口
+API_KEY=密钥
+CLASS_TOTAL_STUDENTS=总学生数
+
+## 接口
+
 请求时在Authorization header中传入Bearer+空格+key
 
 /studentCount get请求 获取学生数量信息
@@ -15,3 +26,7 @@
 /remove get请求 删除记录
 参数 name 传入要删除的姓名
 返回值同/get
+
+## 前端页面
+
+访问/，在query中传入key，即可进入
