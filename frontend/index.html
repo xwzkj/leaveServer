@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>请假管理</title>
+  <script src="./dayjs.min.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <div class="title1">请假管理</div>
+    <!-- 提示信息 -->
+    <div class="card" id="alert-card">
+      <div class="title2">提示</div>
+      <div id="alert-content">
+        暂无消息
+      </div>
+    </div>
+    <!-- 总览 -->
+    <div class="card">
+      <div class="title2">总览</div>
+      <div class="overview-container">
+        <div class="overview-item">
+          <div id="total" class="overview-data">0</div>
+          <div class="overview-label">应到</div>
+        </div>
+        <div class="overview-item">
+          <div id="actual" class="overview-data">0</div>
+          <div class="overview-label">实到</div>
+        </div>
+        <div class="overview-item">
+          <div id="leave" class="overview-data">0</div>
+          <div class="overview-label">请假</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="title2">新增请假</div>
+      <div class="add-input-container">
+        <input class="add-input" id="inputName" placeholder="姓名" maxlength="12" />
+        <input class="add-input" id="inputStart" placeholder="开始日期" maxlength="11" />
+        <input class="add-input" id="inputEnd" placeholder="结束日期" maxlength="11" />
+      </div>
+      <input type="button" class="btn-primary" onclick="addLeave()" style="width:100%" value="提交" />
+    </div>
+    <!-- 请假列表 -->
+    <div class="card">
+      <div class="title2">请假列表</div>
+      <div id="leaveList">
+        获取中...
+      </div>
+    </div>
+  </div>
+  <style>
+    body {
+      background-color: #f9f9f9;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.7rem;
+    }
+
+    .title1 {
+      font-size: 2rem;
+    }
+
+    .title2 {
+      font-size: 1.2rem;
+      color: #777;
+    }
+
+    .card {
+      padding: 1rem;
+      border-radius: 0.5rem;
+      background-color: #fff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      width: 60%;
+      min-width: 25rem;
+      max-width: 35rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    #alert-card {
+      display: none;
+    }
+
+    #alert-content {
+      font-size: 1.1rem;
+      color: #333;
+    }
+
+    .overview-container {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      gap: 1rem;
+    }
+
+    .overview-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      background-color: #f9f9f9;
+    }
+
+    .overview-data {
+      font-weight: bold;
+      font-size: 1.5rem;
+      color: #333;
+    }
+
+    .overview-label {
+      font-size: 1rem;
+      color: #777;
+    }
+
+    .add-input-container {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .add-input {
+      flex: 1;
+      min-width: 5rem;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 0.5rem;
+    }
+
+    .add-input:focus {
+      outline: none;
+      border-color: #777;
+    }
+
+    .btn-primary {
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      background: #ce9e04;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-danger {
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      background: #dc3545;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+
+    #leaveList {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .leave-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      border: 1px solid #eee;
+    }
+
+    .leave-name {
+      font-weight: bold;
+      color: #555;
+    }
+
+    .leave-date {
+      color: #aaa;
+    }
+  </style>
+  <script>
+    const alertCard = document.getElementById('alert-card')
+    const alertContent = document.getElementById('alert-content')
+    const total = document.getElementById('total')
+    const actual = document.getElementById('actual')
+    const leave = document.getElementById('leave')
+    const inputName = document.getElementById('inputName')
+    const inputStart = document.getElementById('inputStart')
+    const inputEnd = document.getElementById('inputEnd')
+    const leaveList = document.getElementById('leaveList')
+    const searchParams = new URLSearchParams(window.location.search)
+    const key = searchParams.get('key')
+
+    inputStart.value = dayjs().format('YYYY-MM-DD')
+    inputEnd.value = dayjs().add(1, 'day').format('YYYY-MM-DD')
+
+    /**
+     * api
+     * @param {string} path
+     * @param {HeadersInit | undefined} config
+     * @returns {Promise<Response>}
+     */
+    async function api(path, config) {
+      return fetch(path, {
+        ...config,
+        headers: {
+          'Authorization': `Bearer ${key}`,
+          ...(config?.headers || {})
+        },
+      });
+    }
+
+    function displayMsgToAlertCard(msg) {
+      alertCard.style.display = 'block'
+      alertContent.textContent = msg
+    }
+
+    async function refreshOverview() {
+      try {
+        let overview = await api('/studentCount')
+        let overviewJson = await overview.json()
+        if (overview.ok) {
+          total.textContent = overviewJson.total
+          actual.textContent = overviewJson.actual
+          leave.textContent = overviewJson.leave
+        } else {
+          throw new Error('获取总览数据失败：' + overviewJson.msg)
+        }
+      } catch (err) {
+        displayMsgToAlertCard(err.message)
+      }
+    }
+    async function refreshList(data) {
+      try {
+        let list
+        let listJson
+        if (!data) {
+          list = await api('/get')
+          listJson = await list.json()
+        } else {
+          list = { ok: true }
+          listJson = data
+        }
+        if (list.ok) {
+          leaveList.innerHTML = ''
+          if (listJson.length === 0) {
+            leaveList.textContent = '暂无请假记录'
+          } else {
+            listJson.forEach(item => {
+              let leaveItem = document.createElement('div')
+              leaveItem.classList.add('leave-item')
+              leaveItem.innerHTML = `
+              <div class="leave-name">${item.name}</div>
+              <div class="leave-date">${item.start} => ${item.end}</div>
+              <input type="button" class="btn-danger" onclick="removeLeave('${item.name}')" value="删除" />
+            `
+              leaveList.appendChild(leaveItem)
+            })
+          }
+        } else {
+          throw new Error('获取请假列表失败：' + listJson.msg)
+        }
+      } catch (err) {
+        displayMsgToAlertCard(err.message)
+      }
+    }
+    refreshOverview()
+    refreshList()
+
+    async function addLeave() {
+      try {
+        let name = inputName.value
+        let start = inputStart.value
+        let end = inputEnd.value
+        if (!name || !start || !end) {
+          throw new Error('请填写完整的请假信息')
+        }
+
+        let add = await api('/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name, start, end })
+        })
+        let addJson = await add.json()
+        if (add.ok) {
+          displayMsgToAlertCard('请假成功')
+          refreshList(addJson)
+        } else {
+          throw new Error('请假失败：' + addJson.msg)
+        }
+
+      } catch (err) {
+        displayMsgToAlertCard(err.message)
+      }
+    }
+
+    async function removeLeave(name) {
+      try {
+        let remove = await api(`/remove?name=${name}`)
+        let removeJson = await remove.json()
+        if (remove.ok) {
+          displayMsgToAlertCard('删除成功')
+          refreshList(removeJson)
+        } else {
+          throw new Error('删除失败：' + removeJson.msg)
+        }
+      } catch (err) {
+        displayMsgToAlertCard(err.message)
+      }
+    }
+  </script>
+</body>
+
+</html>
