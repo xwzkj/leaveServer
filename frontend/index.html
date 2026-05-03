@@ -272,6 +272,10 @@
     }
     refreshOverview()
     refreshList()
+    setInterval(() => {
+      refreshOverview()
+      refreshList()
+    }, 5000)
 
     async function addLeave() {
       try {
@@ -304,6 +308,9 @@
 
     async function removeLeave(name) {
       try {
+        if (!confirm(`确认删除 ${name} 吗？`)) {
+          return
+        }
         let remove = await api(`/remove?name=${name}`)
         let removeJson = await remove.json()
         if (remove.ok) {
