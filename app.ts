@@ -48,8 +48,15 @@ router.use(async (ctx, next) => {
     }
     return next()
 })
+function getToday() {
+    return data.filter(item => dayjs(item.start).isBefore(dayjs()))
+}
 router.get('/studentCount', async (ctx) => {
-    ctx.body = { total: classTotalStudents, actual: classTotalStudents - data.length, leave: data.length }
+    let dataToday = getToday()
+    ctx.body = { total: classTotalStudents, actual: classTotalStudents - dataToday.length, leave: dataToday.length }
+})
+router.get('/getToday', async (ctx) => {
+    ctx.body = getToday()
 })
 router.get('/get', async (ctx) => {
     ctx.body = data
@@ -124,7 +131,8 @@ function saveToFile() {
 // 过滤过期记录并保存
 async function checkExpiredAndSave() {
     let now = dayjs()
-    data = data.filter(item => now.isBefore(dayjs(item.end)))
+    data = data.filter(item => now.isBefore(dayjs(item.end)))// 过滤过期
+    data.sort((a, b) => dayjs(a.start).diff(dayjs(b.start)))// 按开始时间排序
     saveToFile()
 }
-setInterval(checkExpiredAndSave, 5 * 60 * 1000)
+setInterval(checkExpiredAndSave, 60 * 1000)
