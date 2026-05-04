@@ -37,6 +37,17 @@ const router = new Router()
 app.use(cors())
 app.use(bodyparser())
 
+// 全局错误处理
+app.use(async (ctx, next) => {
+    try {
+        await next()
+    } catch (err) {
+        console.error('服务器错误:', err)
+        ctx.status = 500
+        ctx.body = { 'code': 500, 'msg': '服务器内部错误' }
+    }
+})
+
 // 给router设置鉴权中间件
 router.use(async (ctx, next) => {
     const auth = ctx.get('Authorization')
