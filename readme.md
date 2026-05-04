@@ -15,10 +15,13 @@ CLASS_TOTAL_STUDENTS=总学生数
 
 请求时在Authorization header中传入Bearer+空格+key
 
-/studentCount get请求 获取学生数量信息
+/studentCount get请求 获取今日学生数量信息
 返回值为{total,actual,leave}
 
-/get get请求 获取记录
+/getToday get请求 获取今日有效的记录
+返回值为请假人列表
+
+/get get请求 获取所有记录，包括未来生效的记录
 返回值为请假人列表
 
 /add post请求 添加记录
